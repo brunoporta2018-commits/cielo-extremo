@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet" />
+  <script>addEventListener('submit', function (e) { if (e.defaultPrevented || !e.target.hasAttribute || !e.target.hasAttribute('data-lead-form')) return; e.preventDefault(); location.assign('https://wa.me/5493514084668?text=' + encodeURIComponent('¡Hola! Quiero hacer una consulta.')) })</script>
+  <script defer src="https://laernestina-v1.vercel.app/landing-snippet.js?landing=cieloextremo"></script>
   <script src="assets.js"></script>
   <style>
     /* ── Reset & base ── */
@@ -466,6 +468,15 @@
       .footer-bottom { gap: 12px; }
       .hero-content { padding: 7vw 6vw 10vw; }
     }
+    .iti { display: block; width: 100%; }
+    .phone-field-error { min-height: 1.5em; margin: 0; line-height: 1.5; font-size: 13px; color: #f28b82; }
+    :root {
+      --iti-country-selector-bg: #1a2333;
+      --iti-border-color: rgba(232,226,217,0.1);
+      --iti-hover-color: rgba(255, 255, 255, 0.08);
+      --iti-icon-color: #ccc;
+    }
+    .iti__country-selector { color: #e8e2d9; }
   </style>
 </head>
 <body>
@@ -530,7 +541,7 @@
       <p class="hero-form-eyebrow">Reservas y consultas</p>
 
       <!-- Formulario -->
-      <form class="contact-form" id="waForm" novalidate>
+      <form class="contact-form" id="waForm" data-lead-form method="post" novalidate>
 
         <div class="form-group">
           <label class="form-label" for="nombre">Nombre y apellido</label>
@@ -715,9 +726,26 @@
     }
 
     // ── Formulario WhatsApp ──
-    document.getElementById('waForm').addEventListener('submit', function(e) {
-      e.preventDefault();
+    const waForm = document.getElementById('waForm');
+    function validarConsulta() {
+      const nombre      = document.getElementById('nombre').value.trim();
+      const telefono    = document.getElementById('telefono').value.trim();
+      const salida      = document.getElementById('salida').value.trim();
+      const destino     = document.getElementById('destino').value.trim();
+      const pasajeros   = document.getElementById('pasajeros').value;
+      const fechaSalida = document.getElementById('fechaSalida').value;
 
+      // Validar campos obligatorios
+      if (!nombre || !telefono || !salida || !destino || !pasajeros || !fechaSalida) {
+        ['nombre','telefono','salida','destino','pasajeros','fechaSalida'].forEach(id => {
+          const el = document.getElementById(id);
+          if (!el.value.trim() && !el.value) el.reportValidity();
+        });
+        return false;
+      }
+      return true;
+    }
+    function armarMensaje() {
       const nombre      = document.getElementById('nombre').value.trim();
       const telefono    = document.getElementById('telefono').value.trim();
       const salida      = document.getElementById('salida').value.trim();
@@ -726,15 +754,6 @@
       const fechaSalida = document.getElementById('fechaSalida').value;
       const fechaRetorno= document.getElementById('fechaRetorno').value;
       const info        = document.getElementById('info').value.trim();
-
-      // Validar campos obligatorios
-      if (!nombre || !telefono || !salida || !destino || !pasajeros || !fechaSalida) {
-        ['nombre','telefono','salida','destino','pasajeros','fechaSalida'].forEach(id => {
-          const el = document.getElementById(id);
-          if (!el.value.trim() && !el.value) el.reportValidity();
-        });
-        return;
-      }
 
       // Formatear fecha legible
       function formatFecha(val) {
@@ -752,9 +771,24 @@
       text += `Fecha de salida:  ${formatFecha(fechaSalida)}\n`;
       if (fechaRetorno) text += `Fecha de retorno:  ${formatFecha(fechaRetorno)}\n`;
       if (info) text += `Información adicional:  ${info}\n`;
-
-      const url = 'https://wa.me/5493514084668?text=' + encodeURIComponent(text);
-      window.open(url, '_blank', 'noopener,noreferrer');
+      return text;
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.LaErnestina && window.LaErnestina.attachForm) {
+        window.LaErnestina.attachForm(waForm, {
+          phone: '#telefono',
+          fields: function() { return { firstName: document.getElementById('nombre').value.trim() }; },
+          message: armarMensaje,
+          validate: validarConsulta
+        });
+        return;
+      }
+      waForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (!validarConsulta()) return;
+        const url = 'https://wa.me/5493514084668?text=' + encodeURIComponent(armarMensaje());
+        window.open(url, '_blank', 'noopener,noreferrer');
+      });
     });
   </script>
 </body>
