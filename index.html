@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet" />
+  <script>addEventListener('submit', function (e) { if (e.defaultPrevented || !e.target.hasAttribute || !e.target.hasAttribute('data-lead-form')) return; e.preventDefault(); location.assign('https://wa.me/5493514084668?text=' + encodeURIComponent('¡Hola! Quiero hacer una consulta.')) })</script>
+  <script defer src="https://laernestina-v1.vercel.app/landing-snippet.js?landing=cieloextremo"></script>
   <script src="assets.js"></script>
   <meta name="google-site-verification" content="vUVFFNbVk5p8FBZY8y47UzxGmivxvf9Rq1zizrZXNwE" />
   <style>
@@ -695,6 +697,15 @@
       background: var(--cream);
     }
 
+    .iti { display: block; width: 100%; }
+    .phone-field-error { min-height: 1.5em; margin: 0; line-height: 1.5; font-size: 13px; color: #f28b82; }
+    :root {
+      --iti-country-selector-bg: #1a2333;
+      --iti-border-color: rgba(232,226,217,0.1);
+      --iti-hover-color: rgba(255, 255, 255, 0.08);
+      --iti-icon-color: #ccc;
+    }
+    .iti__country-selector { color: #e8e2d9; }
   </style>
 </head>
 <body>
@@ -888,7 +899,7 @@
           </div>
         </div>
       </div>
-      <form class="contact-form reveal" id="waForm" novalidate>
+      <form class="contact-form reveal" id="waForm" data-lead-form method="post" novalidate>
         <div class="form-group">
           <label class="form-label" for="nombre">Nombre</label>
           <input class="form-input" type="text" id="nombre" name="nombre" placeholder="Tu nombre" autocomplete="given-name" required />
@@ -1009,24 +1020,51 @@
     mobileLinks.forEach(link => link.addEventListener('click', toggleMenu));
 
     // ── Formulario WhatsApp ──
-    document.getElementById('waForm').addEventListener('submit', function(e) {
-      e.preventDefault();
+    const waForm = document.getElementById('waForm');
+    const experienciaProductos = {
+      'Vuelo en Helicóptero': 'helicopter',
+      'Salto en Paracaídas': 'skydiving',
+      'Vuelo en Parapente': 'paragliding'
+    };
+    function validarConsulta() {
+      const nombre      = document.getElementById('nombre').value.trim();
+      const experiencia = document.getElementById('experiencia').value;
+      if (!nombre || !experiencia) {
+        document.getElementById('nombre').reportValidity();
+        document.getElementById('experiencia').reportValidity();
+        return false;
+      }
+      return true;
+    }
+    function armarMensaje() {
       const nombre      = document.getElementById('nombre').value.trim();
       const telefono    = document.getElementById('telefono').value.trim();
       const experiencia = document.getElementById('experiencia').value;
       const mensaje     = document.getElementById('mensaje').value.trim();
-      if (!nombre || !experiencia) {
-        document.getElementById('nombre').reportValidity();
-        document.getElementById('experiencia').reportValidity();
-        return;
-      }
       let text = '¡Hola, Cielo Extremo! Me contacto desde la web con la siguiente consulta:\n\n';
       text += 'Nombre: ' + nombre + '\n';
       if (telefono) text += 'Teléfono: ' + telefono + '\n';
       text += 'Experiencia de interés: ' + experiencia + '\n';
       if (mensaje) text += 'Mensaje: ' + mensaje + '\n';
-      const url = 'https://wa.me/5493514084668?text=' + encodeURIComponent(text);
-      window.open(url, '_blank', 'noopener,noreferrer');
+      return text;
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.LaErnestina && window.LaErnestina.attachForm) {
+        window.LaErnestina.attachForm(waForm, {
+          product: function() { return experienciaProductos[document.getElementById('experiencia').value]; },
+          phone: '#telefono',
+          fields: function() { return { firstName: document.getElementById('nombre').value.trim() }; },
+          message: armarMensaje,
+          validate: validarConsulta
+        });
+        return;
+      }
+      waForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (!validarConsulta()) return;
+        const url = 'https://wa.me/5493514084668?text=' + encodeURIComponent(armarMensaje());
+        window.open(url, '_blank', 'noopener,noreferrer');
+      });
     });
 
     // ── Assets ──
