@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet" />
+  <script>addEventListener('submit', function (e) { if (e.defaultPrevented || !e.target.hasAttribute || !e.target.hasAttribute('data-lead-form')) return; e.preventDefault(); location.assign('https://wa.me/5493514084668?text=' + encodeURIComponent('¡Hola! Quiero hacer una consulta.')) })</script>
+  <script defer src="https://dashboard.estancialaernestina.com/landing-snippet.js?landing=cieloextremo"></script>
   <script src="assets.js"></script>
   <style>
     /* ── Reset & base ── */
@@ -316,6 +318,23 @@
       font-size: 11px; color: var(--cream-dim); opacity: 0.5;
       text-align: center; line-height: 1.6;
     }
+    :root {
+      --iti-country-selector-bg: var(--surface);
+      --iti-border-color: var(--border);
+      --iti-hover-color: rgba(232,226,217,0.08);
+      --iti-icon-color: var(--cream-dim);
+    }
+    .iti { display: block; width: 100%; }
+    .iti__country-selector { color: var(--cream); }
+    .iti__search-input {
+      background: transparent; color: var(--cream);
+      font-family: 'Source Sans 3', sans-serif;
+    }
+    .iti__search-input:focus { outline: 2px solid currentColor; outline-offset: 1px; }
+    .phone-field-error {
+      min-height: 1.5em; margin: 0; line-height: 1.5;
+      font-size: 13px; font-weight: 300; color: #e8877a;
+    }
 
     /* ══════════════════════════════════════════════════════════
        FOOTER
@@ -530,18 +549,25 @@
       <p class="hero-form-eyebrow">Reservas y consultas</p>
 
       <!-- Formulario -->
-      <form class="contact-form" id="waForm" novalidate>
+      <form class="contact-form" id="waForm" data-lead-form method="post">
 
-        <div class="form-group">
-          <label class="form-label" for="nombre">Nombre y apellido</label>
-          <input class="form-input" type="text" id="nombre" name="nombre"
-            placeholder="Tu nombre completo" autocomplete="name" required />
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="firstName">Nombre</label>
+            <input class="form-input" type="text" id="firstName" name="firstName"
+              placeholder="Tu nombre" autocomplete="given-name" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="lastName">Apellido</label>
+            <input class="form-input" type="text" id="lastName" name="lastName"
+              placeholder="Tu apellido" autocomplete="family-name" required />
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="telefono">Teléfono / WhatsApp</label>
-          <input class="form-input" type="tel" id="telefono" name="telefono"
-            placeholder="+54 9 351 000-0000" autocomplete="tel" required />
+          <label class="form-label" for="phone">Teléfono / WhatsApp</label>
+          <input class="form-input" type="tel" id="phone" name="phone"
+            autocomplete="tel" required />
         </div>
 
         <div class="form-row">
@@ -715,46 +741,44 @@
     }
 
     // ── Formulario WhatsApp ──
-    document.getElementById('waForm').addEventListener('submit', function(e) {
-      e.preventDefault();
+    function formatFecha(val) {
+      if (!val) return null;
+      const [y, m, d] = val.split('-');
+      return `${d}/${m}/${y}`;
+    }
 
-      const nombre      = document.getElementById('nombre').value.trim();
-      const telefono    = document.getElementById('telefono').value.trim();
-      const salida      = document.getElementById('salida').value.trim();
-      const destino     = document.getElementById('destino').value.trim();
-      const pasajeros   = document.getElementById('pasajeros').value;
-      const fechaSalida = document.getElementById('fechaSalida').value;
-      const fechaRetorno= document.getElementById('fechaRetorno').value;
-      const info        = document.getElementById('info').value.trim();
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.LaErnestina || !window.LaErnestina.attachForm) return;
+      window.LaErnestina.attachForm(document.getElementById('waForm'), {
+        product: 'aircraft-rental',
+        phone: '#phone',
+        fields: (form) => ({
+          firstName: form.elements.firstName.value.trim(),
+          lastName: form.elements.lastName.value.trim(),
+        }),
+        message: (form) => {
+          const el = form.elements;
+          const nombre       = (el.firstName.value.trim() + ' ' + el.lastName.value.trim()).trim();
+          const telefono     = el.phone.value.trim();
+          const salida       = el.salida.value.trim();
+          const destino      = el.destino.value.trim();
+          const pasajeros    = el.pasajeros.value;
+          const fechaSalida  = el.fechaSalida.value;
+          const fechaRetorno = el.fechaRetorno.value;
+          const info         = el.info.value.trim();
 
-      // Validar campos obligatorios
-      if (!nombre || !telefono || !salida || !destino || !pasajeros || !fechaSalida) {
-        ['nombre','telefono','salida','destino','pasajeros','fechaSalida'].forEach(id => {
-          const el = document.getElementById(id);
-          if (!el.value.trim() && !el.value) el.reportValidity();
-        });
-        return;
-      }
-
-      // Formatear fecha legible
-      function formatFecha(val) {
-        if (!val) return null;
-        const [y, m, d] = val.split('-');
-        return `${d}/${m}/${y}`;
-      }
-
-      let text = ' *Consulta de Taxi Aéreo — Cielo Extremo*\n\n';
-      text += `Nombre:  ${nombre}\n`;
-      text += `Teléfono:  ${telefono}\n`;
-      text += `Lugar de salida:  ${salida}\n`;
-      text += `Destino:  ${destino}\n`;
-      text += `Pasajeros:  ${pasajeros}\n`;
-      text += `Fecha de salida:  ${formatFecha(fechaSalida)}\n`;
-      if (fechaRetorno) text += `Fecha de retorno:  ${formatFecha(fechaRetorno)}\n`;
-      if (info) text += `Información adicional:  ${info}\n`;
-
-      const url = 'https://wa.me/5493514084668?text=' + encodeURIComponent(text);
-      window.open(url, '_blank', 'noopener,noreferrer');
+          let text = ' *Consulta de Taxi Aéreo — Cielo Extremo*\n\n';
+          text += `Nombre:  ${nombre}\n`;
+          if (telefono) text += `Teléfono:  ${telefono}\n`;
+          text += `Lugar de salida:  ${salida}\n`;
+          text += `Destino:  ${destino}\n`;
+          text += `Pasajeros:  ${pasajeros}\n`;
+          text += `Fecha de salida:  ${formatFecha(fechaSalida)}\n`;
+          if (fechaRetorno) text += `Fecha de retorno:  ${formatFecha(fechaRetorno)}\n`;
+          if (info) text += `Información adicional:  ${info}\n`;
+          return text.trimEnd();
+        },
+      });
     });
   </script>
 </body>
