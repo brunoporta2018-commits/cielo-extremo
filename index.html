@@ -599,7 +599,7 @@
     }
     .form-submit:hover { background: #a3d4eb; }
     .form-note {
-      font-size: 11px; color: var(--cream-dim); opacity: 0.5;
+      font-size: 13px; color: var(--cream-dim); opacity: 0.5;
       text-align: center; line-height: 1.6;
     }
     :root {
@@ -714,6 +714,82 @@
       background: var(--cream);
     }
 
+    /* ── Welcome popup ─────────────────────────────────────────── */
+    .welcome {
+      color: var(--cream-dim); background: transparent; border: 0;
+      width: min(800px, 100vw - 2rem); max-width: none;
+      max-height: min(450px, 100dvh - 2rem); padding: 0; overflow: visible;
+      margin: auto; /* the global reset zeroes the UA margin that centers <dialog> */
+    }
+    .welcome::backdrop { background: rgba(10,15,26,0.72); }
+    html:has(.welcome[open]) { overflow: hidden; }
+    .welcome__card {
+      box-sizing: border-box; position: relative; display: grid;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: center;
+      gap: clamp(1rem,3vw,2.25rem);
+      min-height: min(450px, 100dvh - 2rem); max-height: min(450px, 100dvh - 2rem);
+      padding: clamp(2.25rem,4.5vw,3.5rem) clamp(1.5rem,4vw,3.5rem);
+      background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+      overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    }
+    .welcome__card:focus { outline: none; }
+    .welcome__body { display: flex; flex-direction: column; align-items: flex-start; }
+    .welcome__title {
+      font-family: var(--serif); font-weight: 300; color: var(--cream);
+      font-size: clamp(1.9rem,4.4vw,2.8rem); line-height: 1.08; text-wrap: balance;
+    }
+    .welcome__text {
+      margin: 1rem 0 1.75rem; font-size: 1rem; font-weight: 300;
+      line-height: 1.5; text-wrap: pretty;
+    }
+    .welcome__cta {
+      background: var(--celeste); color: var(--bg); text-decoration: none;
+      padding: 17px 40px; border-radius: 2px;
+      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      letter-spacing: 0.28em; text-transform: uppercase; transition: background 0.25s;
+    }
+    .welcome__cta:hover { background: #a3d4eb; }
+    .welcome__art {
+      box-sizing: border-box; justify-self: center; width: 100%; height: auto;
+      max-height: 100%; color: var(--gold);
+    }
+    .welcome__close {
+      position: absolute; top: 1.1rem; right: 1.1rem; z-index: 1;
+      display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+      background: rgba(232,226,217,0.08); color: var(--cream); border: 0;
+      border-radius: 50%; cursor: pointer; transition: background-color 0.2s;
+    }
+    .welcome__close svg { width: 20px; height: 20px; }
+    .welcome__close:hover { background: rgba(232,226,217,0.16); }
+    .welcome__close:focus-visible, .welcome__cta:focus-visible {
+      outline: 2px solid var(--celeste); outline-offset: 3px;
+    }
+    @media (min-width: 860px) {
+      .welcome__card { column-gap: 0; }
+      .welcome__art { padding-left: clamp(1rem,3vw,2.25rem); }
+    }
+    @media (max-width: 700px) {
+      .welcome { width: min(340px, 100vw - 3.5rem); max-height: calc(100dvh - 2rem); }
+      .welcome__card {
+        grid-template-columns: minmax(0,1fr); align-content: start; justify-items: center;
+        gap: 0.75rem; min-height: 0; max-height: none;
+        padding: 2.75rem 1.25rem 1.5rem; text-align: center; overflow: hidden;
+      }
+      .welcome__title { font-size: clamp(1.65rem,7.2vw,2.05rem); }
+      .welcome__body { align-items: center; }
+      .welcome__cta { align-self: stretch; }
+      .welcome__text { max-width: 30ch; margin: 0.75rem 0 1.25rem; }
+      .welcome__art { order: -1; width: auto; max-width: 260px; max-height: 22dvh; }
+    }
+    @media (max-width: 700px) and (max-height: 520px) {
+      .welcome__card { max-height: calc(100dvh - 2rem); overflow-y: auto; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .welcome[open] { animation: welcome-in 0.4s cubic-bezier(.22,1,.36,1); }
+      .welcome[open]::backdrop { animation: welcome-fade 0.4s; }
+    }
+    @keyframes welcome-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+    @keyframes welcome-fade { from { opacity: 0; } }
   </style>
 </head>
 <body>
@@ -936,8 +1012,8 @@
           <label class="form-label" for="mensaje">Mensaje (opcional)</label>
           <textarea class="form-textarea" id="mensaje" name="mensaje" placeholder="Fechas tentativas, número de personas, preguntas..."></textarea>
         </div>
-        <button type="submit" class="form-submit">Enviar </button>
-        <p class="form-note">Al enviar se abre WhatsApp con tu consulta lista para mandar. </p>
+        <button type="submit" class="form-submit">Consultar</button>
+        <p class="form-note">Al tocar «Consultar» te vamos a llevar a WhatsApp con estos datos para que nos envíes tu consulta.</p>
       </form>
     </div>
   </section>
@@ -1164,6 +1240,64 @@
         });
       });
     }
+  </script>
+  <!-- ── WELCOME POPUP ─────────────────────────────────────────── -->
+  <!-- Native <dialog>, opened once per session by the script below. -->
+  <dialog class="welcome" id="welcome-popup" aria-labelledby="welcome-title">
+    <div class="welcome__card" tabindex="-1" autofocus>
+      <button type="button" class="welcome__close" data-welcome-close aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" /></svg>
+      </button>
+      <div class="welcome__body">
+        <h2 class="welcome__title" id="welcome-title">Bienvenidos a Cielo Extremo</h2>
+        <p class="welcome__text">Hacé tu reserva o descubrí todas las experiencias que tenemos para vos en nuestra web.</p>
+        <a href="#contacto-form" class="welcome__cta" data-welcome-cta>Reservá ahora</a>
+      </div>
+      <svg class="welcome__art" viewBox="0 0 400 260" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="300" cy="78" r="26" stroke-width="1" />
+        <path d="M84 52c22-2 44 10 66 30M84 52c-2 16 4 28 14 36M150 82c-14 2-36 6-52 6M98 88l20 34M150 82l-20 40M118 122h12M124 122v10" />
+        <path d="M214 132l58-10 6-8 8 6 30-4-30 10-34 6-20 14z M252 126l10 16 8-2-6-16" stroke-width="1.2" />
+        <path d="M20 232l52-58 30 26 44-62 40 44 30-30 56 54 34-28 46 54 28-24" />
+        <path d="M58 190l14-16 12 10M138 146l8-8 10 12M262 196l10-8 8 10" stroke-width="1" />
+        <path d="M10 244h380" stroke-width="1" />
+        <path d="M40 208c40-10 70 6 110-2s72-14 110-4 70 8 110-2" stroke-width="0.8" opacity="0.6" />
+      </svg>
+    </div>
+  </dialog>
+
+  <script>
+    // ── Welcome popup: once per session, after a short delay ──
+    (() => {
+      const STORAGE_KEY = 'cieloextremo:welcome-popup-seen';
+      const OPEN_DELAY_MS = 1500;
+      const dialog = document.getElementById('welcome-popup');
+      if (!(dialog instanceof HTMLDialogElement) || typeof dialog.showModal !== 'function') return;
+
+      let storage = null;
+      try { storage = window.sessionStorage; } catch {}
+      try { if (storage && storage.getItem(STORAGE_KEY) === '1') return; } catch {}
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      dialog.querySelector('[data-welcome-close]')?.addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
+      dialog.querySelector('[data-welcome-cta]')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        dialog.close();
+        document.getElementById('contacto-form')?.scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
+        document.getElementById('firstName')?.focus({ preventScroll: true });
+      });
+
+      // Do not interrupt someone already typing or navigating the mobile menu.
+      const isBusy = () =>
+        document.activeElement?.matches('input, select, textarea') === true ||
+        document.getElementById('mobileMenu')?.classList.contains('open') === true;
+
+      window.setTimeout(() => {
+        if (dialog.open || isBusy()) return;
+        dialog.showModal();
+        try { storage?.setItem(STORAGE_KEY, '1'); } catch {}
+      }, OPEN_DELAY_MS);
+    })();
   </script>
 </body>
 </html>
